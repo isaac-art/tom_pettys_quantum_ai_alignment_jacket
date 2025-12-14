@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="600" height="800" viewBox="0 0 400 600">
+
+  <!-- Background -->
+  <rect width="400" height="600" fill="white"/>
+
+  <!-- Colour palette -->
+  <!-- Blue strand: #2569b4, Orange strand: #e86b2a -->
+  <!-- Bases: #f4b400, #0f9d58, #4285f4, #db4437 -->
+
+  <!-- Double helix group -->
+  <g id="helix" fill="none" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Left (front) strand: sinusoidal polyline -->
+    <polyline
+      points="
+        200.0,40.0
+        222.6,80.0
+        237.3,120.0
+        239.0,160.0
+        227.0,200.0
+        205.6,240.0
+        182.3,280.0
+        165.1,320.0
+        160.2,360.0
+        169.1,400.0
+        188.8,440.0
+        212.5,480.0
+        231.7,520.0
+      "
+      stroke="#2569b4" stroke-width="10"/>
+
+    <!-- Right (back) strand -->
+    <polyline
+      points="
+        200.0,40.0
+        177.4,80.0
+        162.7,120.0
+        161.0,160.0
+        173.0,200.0
+        194.4,240.0
+        217.7,280.0
+        234.9,320.0
+        239.8,360.0
+        230.9,400.0
+        211.2,440.0
+        187.5,480.0
+        168.3,520.0
+      "
+      stroke="#e86b2a" stroke-width="10"/>
+
+    <!-- Base-pair rungs: alternate “front” and “back” to suggest twist -->
+    <!-- y = 40,80,...,520; x1 (blue side) then x2 (orange side) -->
+
+    <!-- 1 (front) -->
+    <line x1="200.0" y1="40.0" x2="200.0" y2="40.0"
+          stroke="#4285f4" stroke-width="6"/>
+
+    <!-- 2 (back, lighter) -->
+    <line x1="222.6" y1="80.0" x2="177.4" y2="80.0"
+          stroke="#f4b400" stroke-width="6" stroke-opacity="0.45"/>
+
+    <!-- 3 (front) -->
+    <line x1="237.3" y1="120.0" x2="162.7" y2="120.0"
+          stroke="#0f9d58" stroke-width="6"/>
+
+    <!-- 4 (back, lighter) -->
+    <line x1="239.0" y1="160.0" x2="161.0" y2="160.0"
+          stroke="#db4437" stroke-width="6" stroke-opacity="0.45"/>
+
+    <!-- 5 (front, just above cut) -->
+    <line x1="227.0" y1="200.0" x2="173.0" y2="200.0"
+          stroke="#4285f4" stroke-width="6"/>
+
+    <!-- 6 & 7: cut out – no lines here to make the gap -->
+
+    <!-- 8 (back, lighter) -->
+    <line x1="165.1" y1="320.0" x2="234.9" y2="320.0"
+          stroke="#f4b400" stroke-width="6" stroke-opacity="0.45"/>
+
+    <!-- 9 (front) -->
+    <line x1="160.2" y1="360.0" x2="239.8" y2="360.0"
+          stroke="#0f9d58" stroke-width="6"/>
+
+    <!-- 10 (back, lighter) -->
+    <line x1="169.1" y1="400.0" x2="230.9" y2="400.0"
+          stroke="#db4437" stroke-width="6" stroke-opacity="0.45"/>
+
+    <!-- 11 (front) -->
+    <line x1="188.8" y1="440.0" x2="211.2" y2="440.0"
+          stroke="#4285f4" stroke-width="6"/>
+
+    <!-- 12 (back, lighter) -->
+    <line x1="212.5" y1="480.0" x2="187.5" y2="480.0"
+          stroke="#f4b400" stroke-width="6" stroke-opacity="0.45"/>
+
+    <!-- 13 (front) -->
+    <line x1="231.7" y1="520.0" x2="168.3" y2="520.0"
+          stroke="#0f9d58" stroke-width="6"/>
+  </g>
+
+  <!-- Inserted DNA fragment hovering in the gap -->
+  <g id="inserted-fragment" transform="translate(260,260) rotate(-8)">
+    <!-- short “backbone” hints -->
+    <line x1="-40" y1="0" x2="-28" y2="0"
+          stroke="#2569b4" stroke-width="8" stroke-linecap="round"/>
+    <line x1="28" y1="0" x2="40" y2="0"
+          stroke="#e86b2a" stroke-width="8" stroke-linecap="round"/>
+
+    <line x1="-40" y1="24" x2="-28" y2="24"
+          stroke="#2569b4" stroke-width="8" stroke-linecap="round"/>
+    <line x1="28" y1="24" x2="40" y2="24"
+          stroke="#e86b2a" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- three base pairs in the fragment -->
+    <line x1="-28" y1="0" x2="28" y2="0"
+          stroke="#f4b400" stroke-width="6" stroke-linecap="round"/>
+    <line x1="-28" y1="24" x2="28" y2="24"
+          stroke="#0f9d58" stroke-width="6" stroke-linecap="round"/>
+  </g>
+
+</svg>

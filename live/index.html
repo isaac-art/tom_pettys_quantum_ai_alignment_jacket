@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tom Petty AI Alignment Jacket</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #020202;
+      background: #e2e8f0;
+      font-family: "Courier New", monospace;
+    }
+    #console {
+      width: min(90vw, 900px);
+      text-align: center;
+    }
+    #banner {
+      margin: 0 0 0.35rem;
+      color: #7dd3fc;
+      letter-spacing: 0.2rem;
+    }
+    #status {
+      margin: 0 0 0.75rem;
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+    #status[data-tone="ok"] { color: #65f5c0; }
+    #status[data-tone="warn"] { color: #fbbf24; }
+    #status[data-tone="err"] { color: #f87171; }
+    #viewport {
+      border: 1px dashed #555;
+      background: #e2e8f0;
+      padding: 1rem;
+      height: 60vh;
+      overflow: hidden;
+      scroll-behavior: smooth;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    #stream {
+      font-size: 1.3rem;
+      line-height: 1.6rem;
+      white-space: pre-wrap;
+      text-align: center;
+      max-width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+    #positionCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .token {
+      display: inline;
+    }
+    #vectorControls {
+      margin-top: 1rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    #vectorControls label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    #vectorControls select {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #475569;
+      padding: 0.4rem 0.8rem;
+      border-radius: 4px;
+      font-family: "Courier New", monospace;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    #vectorControls select:hover {
+      border-color: #7dd3fc;
+    }
+    #vectorControls select:focus {
+      outline: none;
+      border-color: #7dd3fc;
+      box-shadow: 0 0 0 2px rgba(125, 211, 252, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <main id="console">
+    <pre id="banner">/\\ TOM PETTY'S QUANTUM AI ALIGNMENT JACKET /\\</pre>
+    <p id="status" data-tone="warn">awaiting carrier...</p>
+    <div id="viewport">
+      <canvas id="positionCanvas"></canvas>
+      <div id="stream" aria-live="polite"></div>
+    </div>
+    <div id="vectorControls">
+      <label>
+        X-Axis (TPPAST):
+        <select id="xVectorSelect"></select>
+      </label>
+      <label>
+        Y-Axis (TPPRESENT):
+        <select id="yVectorSelect"></select>
+      </label>
+    </div>
+  </main>
+
+  <script>
+    const stream = document.getElementById("stream");
+    const statusLine = document.getElementById("status");
+    const MAX_DISPLAY_CHARS = 3500;
+    
+    // Position tracking canvas
+    const canvas = document.getElementById("positionCanvas");
+    const ctx = canvas.getContext("2d");
+    let currentX = 0;
+    let currentY = 0;
+    const trail = [];
+    const MAX_TRAIL_LENGTH = 50;
+    
+    // Define drawPosition first so it can be called by resizeCanvas
+    const drawPosition = () => {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const maxRadius = Math.min(canvas.width, canvas.height) * 0.4;
+      
+      // Draw center crosshair
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(centerX - 10, centerY);
+      ctx.lineTo(centerX + 10, centerY);
+      ctx.moveTo(centerX, centerY - 10);
+      ctx.lineTo(centerX, centerY + 10);
+      ctx.stroke();
+      
+      // Draw trail
+      if (trail.length > 1) {
+        ctx.strokeStyle = "rgba(125, 211, 252, 0.3)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < trail.length; i++) {
+          const point = trail[i];
+          const x = centerX + point.x * maxRadius;
+          const y = centerY - point.y * maxRadius; // Flip Y axis
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+      }
+      
+      // Draw current position dot
+      const dotX = centerX + currentX * maxRadius;
+      const dotY = centerY - currentY * maxRadius; // Flip Y axis
+      
+      // Outer glow
+      const gradient = ctx.createRadialGradient(dotX, dotY, 0, dotX, dotY, 15);
+      gradient.addColorStop(0, "rgba(125, 211, 252, 0.8)");
+      gradient.addColorStop(0.5, "rgba(125, 211, 252, 0.4)");
+      gradient.addColorStop(1, "rgba(125, 211, 252, 0)");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, 15, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Inner dot
+      ctx.fillStyle = "#7dd3fc";
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, 5, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    
+    // Resize canvas to match viewport
+    const resizeCanvas = () => {
+      const viewport = document.getElementById("viewport");
+      canvas.width = viewport.offsetWidth;
+      canvas.height = viewport.offsetHeight;
+      drawPosition();
+    };
+    
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    
+    const updatePosition = (x, y) => {
+      currentX = clamp(x);
+      currentY = clamp(y);
+      
+      // Add to trail
+      trail.push({ x: currentX, y: currentY });
+      if (trail.length > MAX_TRAIL_LENGTH) {
+        trail.shift();
+      }
+      
+      drawPosition();
+    };
+
+    const WS_URL = (() => {
+      const proto = location.protocol === "https:" ? "wss" : "ws";
+      const host = location.hostname || "localhost";
+      const port = location.port || "8087";
+      return `${proto}://${host}:${port}/stream`;
+    })();
+
+    let socket;
+    let reconnectTimeout;
+
+    const clamp = (value) => Math.max(-1, Math.min(1, Number(value) || 0));
+
+    const extractVectorValues = (vectors) => {
+      if (!Array.isArray(vectors)) return [0, 0, 0];
+      const aliases = {
+        red: 0, r: 0, vector_r: 0,
+        green: 1, g: 1, vector_g: 1,
+        blue: 2, b: 2, vector_b: 2
+      };
+      const values = [0, 0, 0];
+      vectors.forEach((vec, idx) => {
+        if (!vec) return;
+        const name = String(vec.name || "").toLowerCase();
+        const slot = aliases.hasOwnProperty(name) ? aliases[name] : idx < 3 ? idx : null;
+        if (slot !== null && slot < 3) values[slot] = clamp(vec.strength);
+      });
+      return values;
+    };
+    
+    const extractXYFromVectors = (vectors) => {
+      if (!Array.isArray(vectors)) return [0, 0];
+      let x = 0, y = 0;
+      vectors.forEach((vec) => {
+        if (!vec) return;
+        const name = String(vec.name || "").toUpperCase();
+        if (name === "TPPAST") {
+          x = clamp(vec.strength);
+        } else if (name === "TPPRESENT") {
+          y = clamp(vec.strength);
+        }
+      });
+      return [x, y];
+    };
+
+    const toRGBString = (values) =>
+      `rgb(${values.map((v) => Math.round((clamp(v) + 1) * 0.5 * 255)).join(",")})`;
+
+    let displayCharBudget = 0;
+
+    const appendToken = (chunk) => {
+      if (!chunk || !chunk.text) return;
+      const values = extractVectorValues(chunk.vectors);
+      const span = document.createElement("span");
+      span.className = "token";
+      span.textContent = chunk.text;
+      span.style.color = toRGBString(values);
+      span.dataset.len = String(chunk.text.length);
+      displayCharBudget += chunk.text.length;
+      stream.appendChild(span);
+
+      while (displayCharBudget > MAX_DISPLAY_CHARS && stream.firstChild) {
+        const oldest = stream.firstChild;
+        displayCharBudget -= Number(oldest.dataset.len || oldest.textContent.length || 0);
+        stream.removeChild(oldest);
+      }
+      if (displayCharBudget < 0) displayCharBudget = 0;
+
+      span.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+    };
+
+    const setStatus = (message, tone = "ok") => {
+      statusLine.textContent = message;
+      statusLine.dataset.tone = tone;
+    };
+
+    const scheduleReconnect = () => {
+      if (reconnectTimeout) return;
+      setStatus("link lost // redial queued", "warn");
+      reconnectTimeout = setTimeout(() => {
+        reconnectTimeout = null;
+        connect();
+      }, 1500);
+    };
+
+    const connect = () => {
+      if (socket && socket.readyState === WebSocket.OPEN) return;
+      setStatus("dialing websocket uplink...", "warn");
+      socket = new WebSocket(WS_URL);
+
+      socket.addEventListener("open", () => setStatus("signal locked", "ok"));
+
+      socket.addEventListener("message", (event) => {
+        try {
+          const chunk = JSON.parse(event.data);
+          
+          // Check if this is a reset token
+          if (chunk.reset) {
+            // Clear the stream text
+            stream.innerHTML = "";
+            displayCharBudget = 0;
+            // Clear the trail
+            trail.length = 0;
+            drawPosition();
+          }
+          
+          appendToken(chunk);
+          
+          // Update position from vector strengths
+          if (chunk.vectors) {
+            const [x, y] = extractXYFromVectors(chunk.vectors);
+            updatePosition(x, y);
+          }
+        } catch (err) {
+          console.error("bad packet", err);
+        }
+      });
+
+      socket.addEventListener("close", () => scheduleReconnect());
+      socket.addEventListener("error", (err) => {
+        console.error(err);
+        setStatus("stream error", "err");
+        socket.close();
+      });
+    };
+
+    connect();
+    
+    // Vector selection controls
+    const xVectorSelect = document.getElementById("xVectorSelect");
+    const yVectorSelect = document.getElementById("yVectorSelect");
+    let vectorsLoaded = false;
+    let changingVectors = false;
+    
+    // Load available vectors and populate selects
+    const loadVectors = async () => {
+      try {
+        const proto = location.protocol === "https:" ? "https" : "http";
+        const host = location.hostname || "localhost";
+        const port = location.port || "8087";
+        const response = await fetch(`${proto}://${host}:${port}/vectors`);
+        const data = await response.json();
+        
+        if (data.vectors && Array.isArray(data.vectors)) {
+          // Clear existing options
+          xVectorSelect.innerHTML = "";
+          yVectorSelect.innerHTML = "";
+          
+          // Add options to both selects
+          data.vectors.forEach(vector => {
+            const optionX = document.createElement("option");
+            optionX.value = vector;
+            optionX.textContent = vector;
+            xVectorSelect.appendChild(optionX);
+            
+            const optionY = document.createElement("option");
+            optionY.value = vector;
+            optionY.textContent = vector;
+            yVectorSelect.appendChild(optionY);
+          });
+          
+          // Set default selections
+          xVectorSelect.value = "TPPAST";
+          yVectorSelect.value = "TPPRESENT";
+          vectorsLoaded = true;
+        }
+      } catch (err) {
+        console.error("Error loading vectors:", err);
+      }
+    };
+    
+    // Handle vector change
+    const changeVectors = async (xVector, yVector) => {
+      if (changingVectors) return;
+      changingVectors = true;
+      
+      try {
+        // Clear display
+        stream.innerHTML = "";
+        displayCharBudget = 0;
+        trail.length = 0;
+        drawPosition();
+        
+        // Send change request
+        const proto = location.protocol === "https:" ? "https" : "http";
+        const host = location.hostname || "localhost";
+        const port = location.port || "8087";
+        const response = await fetch(`${proto}://${host}:${port}/vectors/change`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            x: xVector,
+            y: yVector
+          })
+        });
+        
+        const data = await response.json();
+        if (data.status === "success") {
+          setStatus(`vectors: ${xVector} / ${yVector}`, "ok");
+          setTimeout(() => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+              setStatus("signal locked", "ok");
+            }
+          }, 1500);
+        } else {
+          setStatus("vector change failed", "err");
+        }
+      } catch (err) {
+        console.error("Error changing vectors:", err);
+        setStatus("vector change error", "err");
+      } finally {
+        changingVectors = false;
+      }
+    };
+    
+    // Add change listeners
+    xVectorSelect.addEventListener("change", () => {
+      if (vectorsLoaded && !changingVectors) {
+        changeVectors(xVectorSelect.value, yVectorSelect.value);
+      }
+    });
+    
+    yVectorSelect.addEventListener("change", () => {
+      if (vectorsLoaded && !changingVectors) {
+        changeVectors(xVectorSelect.value, yVectorSelect.value);
+      }
+    });
+    
+    // Load vectors on page load
+    loadVectors();
+    
+    // Reset on spacebar press
+    let resetInProgress = false;
+    const handleReset = async () => {
+      if (resetInProgress) return;
+      resetInProgress = true;
+      
+      try {
+        // Clear the display immediately
+        stream.innerHTML = "";
+        displayCharBudget = 0;
+        trail.length = 0;
+        drawPosition();
+        
+        // Send reset request to server
+        const proto = location.protocol === "https:" ? "https" : "http";
+        const host = location.hostname || "localhost";
+        const port = location.port || "8087";
+        const response = await fetch(`${proto}://${host}:${port}/reset`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
+        
+        if (response.ok) {
+          setStatus("generator reset", "ok");
+          setTimeout(() => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+              setStatus("signal locked", "ok");
+            }
+          }, 1000);
+        }
+      } catch (err) {
+        console.error("Reset error:", err);
+        setStatus("reset failed", "err");
+      } finally {
+        resetInProgress = false;
+      }
+    };
+    
+    // Listen for spacebar keypress
+    document.addEventListener("keydown", (event) => {
+      // Prevent default if spacebar is pressed (to avoid scrolling)
+      if (event.code === "Space" && event.target === document.body) {
+        event.preventDefault();
+        handleReset();
+      }
+    });
+  </script>
+</body>
+</html>
