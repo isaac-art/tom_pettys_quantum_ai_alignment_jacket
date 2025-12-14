@@ -32,3 +32,5 @@ REQS:
 im using vgel's repeng code for training and applying control vectors https://github.com/vgel/repeng
 
 you need to also add audio files to live/audio dir or itll crash. (looks for bass.mp3, drums.mp3, other.mp3)
+
+you can see a preview of what the underlying llm generator + control vectors being tweaked every token looks like here:  https://www.youtube.com/watch?v=lNzeQbrWlpw
